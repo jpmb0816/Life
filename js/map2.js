@@ -27,31 +27,6 @@ class Map2 {
         }
     }
 
-    getInput(keyStates) {
-        const player = this.entities[0];
-
-        if (keyStates[87]) {
-            player.velocity.y = -player.speed;
-            player.velocity.x *= 0;
-        }
-        else if (keyStates[83]) {
-            player.velocity.y = player.speed;
-            player.velocity.x = 0;
-        }
-        else if (keyStates[65]) {
-            player.velocity.x = -player.speed;
-            player.velocity.y = 0;
-        }
-        else if (keyStates[68]) {
-            player.velocity.x = player.speed;
-            player.velocity.y = 0;
-        }
-        else {
-            player.velocity.x = 0;
-            player.velocity.y = 0;
-        }
-    }
-
     update() {
         this.entities.forEach(entity => {
             entity.update(this.dimension);

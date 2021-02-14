@@ -34,4 +34,8 @@ class Tools {
 
         return new Vector2(length * Math.cos(angle), length * Math.sin(angle));
     }
+
+    static scaleValue(v, s1, e1, s2, e2) {
+        return (v - s1) / (e1 - s1) * (e2 - s2) + s2;
+    }
 }

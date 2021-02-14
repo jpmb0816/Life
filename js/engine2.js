@@ -1,12 +1,10 @@
 class Engine2 {
     constructor() {
         this.display = new Canvas2(400, 400);
-        this.display.canvas.style.width = this.display.canvas.width + 'px';
-        this.display.canvas.style.width = this.display.canvas.height + 'px';
-        this.lastScale = undefined;
-        this.fixDPI();
+        this.display3D = new Canvas2(600, 400);
 
         document.body.appendChild(this.display.canvas);
+        document.body.appendChild(this.display3D.canvas);
 
         this.lastTime = Tools.getCurrentTimeMillis();
         this.timer = Tools.getCurrentTimeMillis();
@@ -35,17 +33,13 @@ class Engine2 {
             this.mouse.x = event.clientX - rect.left;
             this.mouse.y = event.clientY - rect.top;
         });
-        window.addEventListener('resize', event => {
-            this.fixDPI();
-        });
 
-        this.player = new Player(0, 0, 32, 32, 'red');
+        // this.player = new Player(0, 0, 1, 1, 'red');
 
-        this.map = new Map2(10, 10, 32, 32);
-        this.map.entities.push(this.player);
+        // this.map = new Map2(10, 10, 40, 40);
 
         this.walls = [];
-        this.particle = new Particle2(this.display.canvas);
+        this.light = new Light2(0, 0, this.walls);
 
         for (let i = 0; i < 5; i++) {
             const x1 = Tools.random(400);
@@ -62,20 +56,6 @@ class Engine2 {
         this.walls.push(new Boundary2(0, this.display.canvas.height, 0, 0));
     }
 
-    fixDPI() {
-        this.scale = window.devicePixelRatio;
-
-        if (this.lastScale) {
-            this.display.ctx.scale(-this.lastScale, -this.lastScale);
-        }
-
-        this.display.canvas.width = 400 * this.scale;
-        this.display.canvas.height = 400 * this.scale;
-        this.display.ctx.scale(this.scale, this.scale);
-
-        this.lastScale = this.scale;
-    }
-
     start() {
         if (!this.interval) {
             this.interval = setInterval(() => this.tick(), 1000 / this.targetFPS);
@@ -90,25 +70,59 @@ class Engine2 {
     }
 
     getInput() {
-        this.map.getInput(this.keyStates);
+        if (this.keyStates[87]) {
+            this.light.velocity = Tools.fromAngle(this.light.heading, this.light.speed);
+        }
+        else if (this.keyStates[83]) {
+            this.light.velocity = Tools.fromAngle(this.light.heading - Tools.radians(180), this.light.speed);
+        }
+        else {
+            this.light.velocity.x = 0;
+            this.light.velocity.y = 0;
+        }
+
+        if (this.keyStates[65]) {
+            this.light.rotate(-0.1);
+            this.light.velocity.x = 0;
+            this.light.velocity.y = 0;
+        }
+        else if (this.keyStates[68]) {
+            this.light.rotate(0.1);
+        }
     }
 
     update() {
-        // this.map.update();
-        this.particle.update(this.mouse);
+        this.light.update();
     }
 
     render(ctx) {
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, this.display.canvas.width, this.display.canvas.height);
 
-        // this.map.render(ctx);
         this.walls.forEach(wall => {
             wall.render(ctx);
         });
 
-        this.particle.render(ctx);
-        this.particle.look(this.walls, ctx);
+        const ctx3D = this.display3D.ctx;
+        const sceneWidth = this.display3D.canvas.width;
+        const sceneHeight = this.display3D.canvas.height;
+        const distances = this.light.getIntersectionDistances(ctx);
+        const rectWidth = sceneWidth / distances.length;
+
+        ctx3D.fillStyle = '#33CCFF';
+        ctx3D.fillRect(0, 0, sceneWidth, sceneHeight / 2);
+
+        ctx3D.fillStyle = '#8B0000';
+        ctx3D.fillRect(0, sceneHeight / 2, sceneWidth, sceneHeight / 2);
+
+        for (let i = 0; i < distances.length; i++) {
+            const sq = distances[i] * distances[i];
+            const wSq = sceneWidth * sceneWidth;
+            const b = Tools.scaleValue(sq, 0, wSq, 255, 0);
+            const rectHeight = sceneHeight * this.light.fov / distances[i];
+            ctx3D.fillStyle = 'rgb(' + b + ', ' + b + ', ' + b + ')';
+            ctx3D.fillRect((i * rectWidth + rectWidth / 2) - (rectWidth / 2), (sceneHeight / 2) - (rectHeight / 2), rectWidth + 1, rectHeight);
+        }
 
         ctx.fillStyle = 'red';
         ctx.font = '15px sans-serif';

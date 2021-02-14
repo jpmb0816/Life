@@ -4,6 +4,11 @@ class Point2 {
         this.y = y || 0;
     }
 
+    add(point) {
+        this.x += point.x;
+        this.y += point.y;
+    }
+
     static distance(a, b) {
         const xDiff = a.x - b.x;
         const yDiff = a.y - b.y;

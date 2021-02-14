@@ -21,4 +21,8 @@ class Vector2 {
     static dot(a, b) {
         return a.x * b.x + a.y * b.y;
     }
+
+    heading() {
+        return Math.atan2(this.y, this.x);
+    }
 }
